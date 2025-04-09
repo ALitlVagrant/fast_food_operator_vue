@@ -14,7 +14,7 @@ export default defineConfig({
       key: fs.readFileSync('localhost-key.pem'),
       cert: fs.readFileSync('localhost.pem'),
     },
-    port: 5173, // eller en annan port om du vill
+    port: 5173, 
   },
   resolve: {
     alias: {

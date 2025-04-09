@@ -1,16 +1,29 @@
 <template>
   <div id="app">
-    <DisplayOrder />
+    <!-- Navigering mellan sidor -->
+    <nav>
+      <router-link to="/">Home</router-link>
+      <router-link to="/kitchen-display">Kitchen Display</router-link>
+    </nav>
+
+    <!-- Här renderas den aktuella komponenten beroende på vilken rutt som är vald -->
+    <router-view></router-view>
   </div>
 </template>
 
 <script>
-import DisplayOrder from './components/DisplayOrderNumber.vue';
-
 export default {
   name: 'App',
-  components: {
-    DisplayOrder,
-  },
 };
 </script>
+
+<style scoped>
+/* Lägg till eventuell stil för navigeringsmenyn här */
+nav {
+  margin-bottom: 1rem;
+}
+
+router-link {
+  margin-right: 1rem;
+}
+</style>

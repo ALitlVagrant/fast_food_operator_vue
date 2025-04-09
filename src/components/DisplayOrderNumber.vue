@@ -5,7 +5,7 @@
       <p v-if="orderNumbers.length > 0" v-for="(num, index) in orderNumbers" :key="index">
         #{{ num }}
       </p>
-      <p v-else>Hämtar könummer...</p>
+      <p v-else>Inga könummer kvar...</p>
     </div>
   </div>
 </template>
