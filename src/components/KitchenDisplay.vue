@@ -11,6 +11,7 @@
           <p><strong>Order #: </strong>{{ order.orderNumber }}</p>
           <p v-if="order.customerNote"><strong>Notering:</strong> {{ order.customerNote }}</p>
 
+          <!-- Visa produkter -->
           <div>
             <strong>Produkter:</strong>
             <ul>
@@ -20,6 +21,7 @@
             </ul>
           </div>
 
+          <!-- Visa combos -->
           <div v-if="order.orderCombos.length">
             <strong>Combos:</strong>
             <ul>
@@ -29,6 +31,7 @@
             </ul>
           </div>
 
+          <!-- Markera som klar -->
           <button @click="markOrderAsComplete(order)">Markera som klar</button>
         </div>
       </div>
@@ -40,13 +43,30 @@
         <div v-for="order in completedOrders" :key="order.orderId" class="order-card completed">
           <p><strong>Order #: </strong>{{ order.orderNumber }}</p>
           <p v-if="order.customerNote"><strong>Notering:</strong> {{ order.customerNote }}</p>
+
+          <!-- Visa produkter -->
+          <div>
+            <strong>Produkter:</strong>
+            <ul>
+              <li v-for="product in order.orderProducts" :key="product.productId">
+                {{ product.productName }} x{{ product.quantity }}
+              </li>
+            </ul>
+          </div>
+
+          <!-- Visa combos -->
+          <div v-if="order.orderCombos.length">
+            <strong>Combos:</strong>
+            <ul>
+              <li v-for="combo in order.orderCombos" :key="combo.comboId">
+                {{ combo.comboName }} x{{ combo.quantity }}
+              </li>
+            </ul>
+          </div>
         </div>
-        
       </div>
     </div>
   </div>
-
-
 </template>
 
 <script>
@@ -54,20 +74,20 @@ export default {
   name: 'KitchenDisplay',
   data() {
     return {
-      orders: [], // Alla ordrar
+      orders: [], 
+      intervalId: null, // För att spara intervallet
     };
   },
   computed: {
-    // Filtrera pågående ordrar (false) baserat på orderStatus
     activeOrders() {
       return this.orders.filter(order => order.orderStatus === false); // Pågående ordrar
     },
-    // Filtrera färdiga ordrar (true) baserat på orderStatus
     completedOrders() {
       return this.orders.filter(order => order.orderStatus === true); // Färdiga ordrar
     }
   },
   methods: {
+    // Hämtar ordrar från API
     async fetchOrders() {
       try {
         const res = await fetch('https://localhost:8080/api/order/GetOrders');
@@ -77,6 +97,8 @@ export default {
         console.error('Fel vid hämtning av ordrar:', error);
       }
     },
+
+    // Markera order som klar
     async markOrderAsComplete(order) {
       try {
         const response = await fetch('https://localhost:8080/api/order/completeOrder', {
@@ -96,50 +118,88 @@ export default {
     }
   },
   mounted() {
-    this.fetchOrders(); // Hämta ordrar när komponenten monteras
+    this.fetchOrders(); // Hämtar ordrar
+    this.intervalId = setInterval(this.fetchOrders, 5000); // Uppdatera ordrarna var 5:e sekund
+  },
+  beforeDestroy() {
+    clearInterval(this.intervalId);
   }
 };
-
 </script>
 
 <style scoped>
 .kitchen-container {
   max-width: 1000px;
   margin: 2rem auto;
-  font-family: Arial, sans-serif;
+  padding: 1rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   text-align: center;
+  background-color: #f4f4f9;
+  border-radius: 12px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
 }
+
 .orders-wrapper {
   display: flex;
   justify-content: space-between;
-  gap: 2rem;
+  gap: 1.5rem;
+  flex-wrap: wrap; /* Gör layouten mer responsiv */
 }
+
 .orders-section {
   flex: 1;
-  background: #f8f8f8;
-  border-radius: 10px;
-  padding: 1rem;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
 }
+
+.orders-section:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
 .orders-section.ready {
-  background: #e6ffe6;
+  background: #e9f7e9;
+  border-left: 6px solid #28a745;
 }
+
 .order-card {
-  border: 1px solid #ccc;
+  border: 1px solid #e0e0e0;
   padding: 1rem;
-  margin: 0.5rem 0;
-  border-radius: 8px;
+  margin: 0.75rem 0;
+  border-radius: 10px;
+  background-color: #fafafa;
   text-align: left;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  transition: background-color 0.3s ease, transform 0.3s ease;
 }
+
+.order-card:hover {
+  background-color: #f1f1f1;
+  transform: translateX(5px);
+}
+
 .order-card.completed {
-  background-color: #c8ffc8;
+  background-color: #e3f8e3;
+  border-color: #a2d8a2;
 }
+
 button {
-  margin-top: 0.5rem;
-  padding: 0.5rem 1rem;
+  margin-top: 1rem;
+  padding: 0.6rem 1.2rem;
   background-color: #4caf50;
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+button:hover {
+  background-color: #45a049;
+  transform: scale(1.05);
 }
 </style>

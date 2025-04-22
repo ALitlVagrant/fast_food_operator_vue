@@ -2,7 +2,7 @@
   <div id="app">
     <!-- Navigering mellan sidor -->
     <nav>
-      <router-link to="/">Home</router-link>
+      <router-link to="/">Display Order</router-link>
       <router-link to="/kitchen-display">Kitchen Display</router-link>
     </nav>
 
@@ -18,7 +18,6 @@ export default {
 </script>
 
 <style scoped>
-/* Lägg till eventuell stil för navigeringsmenyn här */
 nav {
   margin-bottom: 1rem;
 }
