@@ -3,13 +3,14 @@
     <h1>Köksdisplay</h1>
 
     <div class="orders-wrapper">
-      <!-- Pågående ordrar -->
+      <!-- Ej påbörjade ordrar -->
       <div class="orders-section">
-        <h2>Pågående ordrar</h2>
-        <div v-if="activeOrders.length === 0">Inga pågående ordrar</div>
-        <div v-for="order in activeOrders" :key="order.orderId" class="order-card">
+        <h2>Ej Påbörjade Ordrar</h2>
+        <div v-if="pendingOrders.length === 0">Inga påbörjade ordrar</div>
+        <div v-for="order in pendingOrders" :key="order.orderId" :class="['order-card', getOrderCardClass(order)]">
           <p><strong>Order #: </strong>{{ order.orderNumber }}</p>
           <p v-if="order.customerNote"><strong>Notering:</strong> {{ order.customerNote }}</p>
+          <p><strong>Skapad:</strong> {{ order.createdAt }}</p>
 
           <!-- Visa produkter -->
           <div>
@@ -17,6 +18,11 @@
             <ul>
               <li v-for="product in order.orderProducts" :key="product.productId">
                 {{ product.productName }} x{{ product.quantity }}
+                <ul v-if="product.ingredients.length">
+                  <li v-for="ingredient in product.ingredients" :key="ingredient.ingredientName">
+                    - {{ ingredient.ingredientName }}
+                  </li>
+                </ul>
               </li>
             </ul>
           </div>
@@ -27,6 +33,55 @@
             <ul>
               <li v-for="combo in order.orderCombos" :key="combo.comboId">
                 {{ combo.comboName }} x{{ combo.quantity }}
+                <ul v-if="combo.ingredients.length">
+                  <li v-for="ingredient in combo.ingredients" :key="ingredient.ingredientName">
+                    - {{ ingredient.ingredientName }}
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Markera som påbörjad -->
+          <button @click="markOrderAsInProgress(order)">Markera som påbörjad</button>
+        </div>
+      </div>
+
+      <!-- Pågående ordrar -->
+      <div class="orders-section">
+        <h2>Pågående Ordrar</h2>
+        <div v-if="activeOrders.length === 0">Inga pågående ordrar</div>
+        <div v-for="order in activeOrders" :key="order.orderId" :class="['order-card', getOrderCardClass(order)]">
+          <p><strong>Order #: </strong>{{ order.orderNumber }}</p>
+          <p v-if="order.customerNote"><strong>Notering:</strong> {{ order.customerNote }}</p>
+          <p><strong>Skapad:</strong> {{ order.createdAt }}</p>
+
+          <!-- Visa produkter -->
+          <div>
+            <strong>Produkter:</strong>
+            <ul>
+              <li v-for="product in order.orderProducts" :key="product.productId">
+                {{ product.productName }} x{{ product.quantity }}
+                <ul v-if="product.ingredients.length">
+                  <li v-for="ingredient in product.ingredients" :key="ingredient.ingredientName">
+                    - {{ ingredient.ingredientName }}
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Visa combos -->
+          <div v-if="order.orderCombos.length">
+            <strong>Combos:</strong>
+            <ul>
+              <li v-for="combo in order.orderCombos" :key="combo.comboId">
+                {{ combo.comboName }} x{{ combo.quantity }}
+                <ul v-if="combo.ingredients.length">
+                  <li v-for="ingredient in combo.ingredients" :key="ingredient.ingredientName">
+                    - {{ ingredient.ingredientName }}
+                  </li>
+                </ul>
               </li>
             </ul>
           </div>
@@ -38,11 +93,12 @@
 
       <!-- Färdiga ordrar -->
       <div class="orders-section ready">
-        <h2>Färdiga ordrar</h2>
+        <h2>Färdiga Ordrar</h2>
         <div v-if="completedOrders.length === 0">Inga färdiga ordrar</div>
         <div v-for="order in completedOrders" :key="order.orderId" class="order-card completed">
           <p><strong>Order #: </strong>{{ order.orderNumber }}</p>
           <p v-if="order.customerNote"><strong>Notering:</strong> {{ order.customerNote }}</p>
+          <p><strong>Skapad:</strong> {{ order.createdAt }}</p>
 
           <!-- Visa produkter -->
           <div>
@@ -50,6 +106,11 @@
             <ul>
               <li v-for="product in order.orderProducts" :key="product.productId">
                 {{ product.productName }} x{{ product.quantity }}
+                <ul v-if="product.ingredients.length">
+                  <li v-for="ingredient in product.ingredients" :key="ingredient.ingredientName">
+                    - {{ ingredient.ingredientName }}
+                  </li>
+                </ul>
               </li>
             </ul>
           </div>
@@ -60,6 +121,11 @@
             <ul>
               <li v-for="combo in order.orderCombos" :key="combo.comboId">
                 {{ combo.comboName }} x{{ combo.quantity }}
+                <ul v-if="combo.ingredients.length">
+                  <li v-for="ingredient in combo.ingredients" :key="ingredient.ingredientName">
+                    - {{ ingredient.ingredientName }}
+                  </li>
+                </ul>
               </li>
             </ul>
           </div>
@@ -74,19 +140,35 @@ export default {
   name: 'KitchenDisplay',
   data() {
     return {
-      orders: [], 
+      orders: [],
       intervalId: null, // För att spara intervallet
     };
   },
   computed: {
+    pendingOrders() {
+      return this.orders.filter(order => order.orderStatus === 0); // Ej påbörjade ordrar
+    },
     activeOrders() {
-      return this.orders.filter(order => order.orderStatus === false); // Pågående ordrar
+      return this.orders.filter(order => order.orderStatus === 1); // Pågående ordrar
     },
     completedOrders() {
-      return this.orders.filter(order => order.orderStatus === true); // Färdiga ordrar
+      return this.orders.filter(order => order.orderStatus === 2); // Färdiga ordrar
     }
   },
   methods: {
+    getOrderCardClass(order) {
+      switch (order.orderStatus) {
+        case 0:
+          return 'pending';     // Ej påbörjad = röd
+        case 1:
+          return 'in-progress'; // Påbörjad = gul
+        case 2:
+          return 'completed';   // Färdig = grön (du har redan `completed` i CSS)
+        default:
+          return '';
+      }
+    },
+
     // Hämtar ordrar från API
     async fetchOrders() {
       try {
@@ -97,6 +179,30 @@ export default {
         console.error('Fel vid hämtning av ordrar:', error);
       }
     },
+
+    // Markera order som påbörjad
+    async markOrderAsInProgress(order) {
+      try {
+        const response = await fetch('https://localhost:8080/api/order/startOrder', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            orderId: order.orderId, // Skicka med ordens ID
+            orderNumber: order.orderNumber, // Om det behövs
+            orderStatus: 1 // Sätt status till "Påbörjad" (1)
+          }),
+        });
+
+        if (!response.ok) throw new Error('Misslyckades att markera order som påbörjad');
+
+        await this.fetchOrders(); // Uppdatera listan efter att ha markerat som påbörjad
+      } catch (error) {
+        console.error('Fel vid uppdatering av order:', error);
+      }
+    },
+
 
     // Markera order som klar
     async markOrderAsComplete(order) {
@@ -181,8 +287,18 @@ export default {
   transform: translateX(5px);
 }
 
+/* Färger beroende på orderstatus */
+.order-card.pending {
+  border-left: 6px solid #dc3545; /* Röd */
+}
+
+.order-card.in-progress {
+  border-left: 6px solid #ffc107; /* Gul */
+}
+
 .order-card.completed {
   background-color: #e3f8e3;
+  border-left: 6px solid #28a745; /* Grön */
   border-color: #a2d8a2;
 }
 
@@ -203,3 +319,4 @@ button:hover {
   transform: scale(1.05);
 }
 </style>
+

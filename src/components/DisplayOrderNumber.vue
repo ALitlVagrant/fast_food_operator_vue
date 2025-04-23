@@ -24,7 +24,6 @@
         >
           #{{ order.number }}
         </p>
-
       </div>
     </div>
   </div>
@@ -36,7 +35,7 @@ export default {
   data() {
     return {
       activeOrderNumbers: [],
-      completedOrderNumbers: [], // Nu: { number: ..., timestamp: ... }
+      completedOrderNumbers: [],
       intervalId: null,
       cleanupIntervalId: null,
     };
@@ -61,20 +60,21 @@ export default {
 
         // Aktiva
         this.activeOrderNumbers = orders
-            .filter(order => !order.orderStatus)
+            .filter(order => order.orderStatus === 0 || order.orderStatus === 1)
             .map(order => order.orderNumber);
 
-        // Färdiga: lägg bara till NYA completed som inte redan finns
+
         const existingNumbers = this.completedOrderNumbers.map(o => o.number);
 
         const newCompleted = orders
-            .filter(order => order.orderStatus)
+            .filter(order => order.orderStatus === 2) // Endast färdiga ordrar
             .map(order => order.orderNumber)
             .filter(num => !existingNumbers.includes(num))
             .map(num => ({
               number: num,
               timestamp: Date.now(),
             }));
+
 
         this.completedOrderNumbers.push(...newCompleted);
 
